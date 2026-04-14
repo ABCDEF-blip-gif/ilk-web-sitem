@@ -2,10 +2,79 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Benim İlk Sayfam</title>
+    <title>Benim Dinazor Oyunum</title>
+    <style>
+        /* Burası oyunun nasıl görüneceğini belirler */
+        body { text-align: center; font-family: Arial, sans-serif; overflow: hidden; }
+        #gameCanvas { border-bottom: 2px solid #555; background-color: #f7f7f7; display: none; margin: 0 auto; }
+        .start-btn { padding: 15px 30px; font-size: 20px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; margin-top: 50px; }
+    </style>
 </head>
 <body>
-    <h1>Merhaba Dünya!</h1>
-    <p>GitHub üzerinde ilk HTML sayfamı oluşturdum.</p>
+
+    <h1>Web Siteme Hoş Geldin!</h1>
+    <p>Aşağıdaki butona basarak gizli oyunu başlatabilirsin.</p>
+    
+    <button class="start-btn" onclick="startGame()">Oyunu Başlat</button>
+
+    <canvas id="gameCanvas" width="600" height="200"></canvas>
+
+    <script>
+        // Oyun Ayarları
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        let score = 0;
+        let isPlaying = false;
+        let dino = { x: 50, y: 150, w: 40, h: 40, dy: 0, jumpForce: 12, gravity: 0.6, grounded: false };
+        let obstacles = [];
+        let gameSpeed = 5;
+
+        function startGame() {
+            document.querySelector(".start-btn").style.display = "none";
+            canvas.style.display = "block";
+            isPlaying = true;
+            gameLoop();
+        }
+
+        // Zıplama Kontrolü (Boşluk tuşu veya ekrana tıklama)
+        window.addEventListener("keydown", (e) => { if(e.code === "Space" && dino.grounded) dino.dy = -dino.jumpForce; });
+        canvas.addEventListener("click", () => { if(dino.grounded) dino.dy = -dino.jumpForce; });
+
+        function gameLoop() {
+            if(!isPlaying) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dinazor Hareketleri
+            dino.dy += dino.gravity;
+            dino.y += dino.dy;
+            if(dino.y > 150) { dino.y = 150; dino.dy = 0; dino.grounded = true; } else { dino.grounded = false; }
+
+            // Dinazoru Çiz (Yeşil bir kare)
+            ctx.fillStyle = "#555";
+            ctx.fillRect(dino.x, dino.y, dino.w, dino.h);
+
+            // Engelleri Yönet
+            if(Math.random() < 0.02) obstacles.push({ x: canvas.width, y: 160, w: 20, h: 30 });
+            
+            for(let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= gameSpeed;
+                ctx.fillStyle = "red";
+                ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].w, obstacles[i].h);
+
+                // Çarpışma Kontrolü
+                if(dino.x < obstacles[i].x + obstacles[i].w && dino.x + dino.w > obstacles[i].x &&
+                   dino.y < obstacles[i].y + obstacles[i].h && dino.y + dino.h > obstacles[i].y) {
+                    alert("Eyvah! Çarptın. Skorun: " + Math.floor(score));
+                    document.location.reload();
+                }
+                if(obstacles[i].x < -20) obstacles.splice(i, 1);
+            }
+
+            score += 0.1;
+            ctx.fillStyle = "black";
+            ctx.fillText("Skor: " + Math.floor(score), 530, 20);
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
 </body>
 </html>
